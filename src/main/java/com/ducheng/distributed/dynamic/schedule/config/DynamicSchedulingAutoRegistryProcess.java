@@ -1,14 +1,14 @@
 package com.ducheng.distributed.dynamic.schedule.config;
-import com.alibaba.cloud.nacos.NacosConfigProperties;
-import com.alibaba.nacos.api.NacosFactory;
-import com.alibaba.nacos.api.config.ConfigService;
-import com.ducheng.distributed.dynamic.schedule.common.ConstantsPool;
-import com.ducheng.distributed.dynamic.schedule.annotation.DynamicScheduled;
-import com.ducheng.distributed.dynamic.schedule.task.CustomCronTaskRegister;
-import com.ducheng.distributed.dynamic.schedule.task.DcSchedulingRunnable;
+
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
@@ -17,25 +17,29 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.ReflectionUtils;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
+import com.alibaba.cloud.nacos.NacosConfigProperties;
+import com.alibaba.nacos.api.NacosFactory;
+import com.alibaba.nacos.api.config.ConfigService;
+import com.ducheng.distributed.dynamic.schedule.common.ConstantsPool;
+import com.ducheng.distributed.dynamic.schedule.annotation.DynamicScheduled;
+import com.ducheng.distributed.dynamic.schedule.task.CustomCronTaskRegister;
+import com.ducheng.distributed.dynamic.schedule.task.DcSchedulingRunnable;
 
 public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor,InitializingBean {
 
-    @Autowired
+
     private CustomCronTaskRegister customCronTaskRegister;
 
 
     @Autowired
     private NacosConfigProperties nacosConfigProperties;
 
-    //@Value("${spring.cloud.gateway.dynamic.data-id:gateway-route}")
-    private String dataId = "application-dr-config-dev.yml";
+    @Value("${spring.cloud.distributed.dynamic.schedule-id}")
+    private String dataId;
 
 
     @Override
-    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
         Method[] methods = ReflectionUtils.getAllDeclaredMethods(bean.getClass());
         if (methods == null) return bean;
         for (Method method : methods) {
@@ -59,7 +63,6 @@ public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor,I
         }
         return bean;
     }
-
 
     @Bean("dynamic-schedule-taskScheduler")
     public TaskScheduler taskScheduler() {
@@ -85,8 +88,30 @@ public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor,I
     @Override
     public void afterPropertiesSet() throws Exception {
         ConfigService configService = NacosFactory.createConfigService(nacosConfigProperties.assembleConfigServiceProperties());
-        // 程序首次启动, 并加载初始化路由配置
+        // 程序首次启动, 并加载初始动态定时任务的配置
         String initConfigInfo = configService.getConfig(dataId, nacosConfigProperties.getGroup(), 5000);
+        // 把配置文件解析成key value 的模式
 
+        //这里看看怎么把config 的配置搞成key value
+//        List<String> list = new ArrayList<String>(event.getKeys());
+//        for (String str : list) {
+//            if (ConstantsPool.PROPERTIES_TASK_IDS.containsKey(str)) {
+//                List<String> taskIds  = ConstantsPool.PROPERTIES_TASK_IDS.get(str);
+//                String cronExpression = environment.getProperty(str);
+//                addTask(taskIds,cronExpression);
+//            }
+//        }
+
+    }
+
+    /**
+     * 添加到定时任务
+     * @param taskIds
+     * @param cronExpression
+     */
+    public void addTask(List<String> taskIds,String cronExpression) {
+        taskIds.stream().forEach(x-> {
+            customCronTaskRegister.addCronTask(x,cronExpression);
+        });
     }
 }
