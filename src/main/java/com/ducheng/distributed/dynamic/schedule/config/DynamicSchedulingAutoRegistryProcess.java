@@ -3,12 +3,10 @@ package com.ducheng.distributed.dynamic.schedule.config;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.ducheng.distributed.dynamic.schedule.utils.SpringUtils;
+import com.ducheng.distributed.dynamic.schedule.utils.StrUtil;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,13 +29,6 @@ import com.ducheng.distributed.dynamic.schedule.task.DcSchedulingRunnable;
 
 public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor, CommandLineRunner {
 
-    private static Log log = LogFactory.getLog(DynamicSchedulingAutoRegistryProcess.class);
-
-    private static Map<String,String> LOCAL_SCHEDULE_KEYS_MAP = new HashMap<>(16);
-
-    private CustomCronTaskRegister customCronTaskRegister;
-
-
     @Autowired
     private NacosConfigProperties nacosConfigProperties;
 
@@ -53,15 +44,15 @@ public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor, 
             DynamicScheduled dcsScheduled = AnnotationUtils.findAnnotation(method, DynamicScheduled.class);
             //初始化加载定时任务
             if (!ObjectUtils.isEmpty(dcsScheduled)) {
-                String resolve = null;
+                String resolve = StrUtil.resolveKey(dcsScheduled.cron());
                 DcSchedulingRunnable schedulingRunnable = new DcSchedulingRunnable(bean,beanName,method.getName());
                 //把他放到缓存里面
-                if (!ConstantsPool.PROPERTIES_TASK_IDS.containsKey(dcsScheduled.cron())) {
+                if (!ConstantsPool.PROPERTIES_TASK_IDS.containsKey(resolve)) {
                     List<String> list = new ArrayList<>();
                     list.add(schedulingRunnable.getTaskId());
-                    ConstantsPool.PROPERTIES_TASK_IDS.put(dcsScheduled.cron(),list);
+                    ConstantsPool.PROPERTIES_TASK_IDS.put(resolve,list);
                 } else {
-                    List<String> list = ConstantsPool.PROPERTIES_TASK_IDS.get(dcsScheduled.cron());
+                    List<String> list = ConstantsPool.PROPERTIES_TASK_IDS.get(resolve);
                     list.add(schedulingRunnable.getTaskId());
                 }
                 ConstantsPool.RUNNABLE_MAP.put(schedulingRunnable.getTaskId(),schedulingRunnable);
@@ -102,7 +93,7 @@ public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor, 
         String lines[] = initConfigInfo.split("\\r?\\n");
         //在转成map
         for (String str: lines) {
-            String[] split = str.split(":");
+            String[] split = str.split(": ");
             if (ConstantsPool.PROPERTIES_TASK_IDS.containsKey(split[0])) {
                 List<String> taskIds  = ConstantsPool.PROPERTIES_TASK_IDS.get(split[0]);
                 String cronExpression = split[1];
@@ -118,8 +109,7 @@ public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor, 
      */
     public void addTask(List<String> taskIds,String cronExpression) {
         taskIds.stream().forEach(x-> {
-            customCronTaskRegister.addCronTask(x,cronExpression);
+            SpringUtils.getBean(CustomCronTaskRegister.class).addCronTask(x,cronExpression);
         });
     }
-
 }
