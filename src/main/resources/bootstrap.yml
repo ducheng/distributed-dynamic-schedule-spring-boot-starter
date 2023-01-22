@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: test
+  cloud:
+    nacos:
+      config:
+        server-addr: ${NACOS_CONFIG_HOST_PORT:127.0.0.1:8848}
+        namespace: ${NACOS_CONFIG_NAMESPACE:dd02f7f8-99cf-4890-a16a-d889b259a8d6}
+        file-extension: yaml
+        distributed:
+          dynamic:
+            schedule-id: test0119
+        shared-configs[0]:
+          dataId: test0119
+          refresh: true

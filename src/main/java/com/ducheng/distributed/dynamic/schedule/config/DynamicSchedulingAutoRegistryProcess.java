@@ -3,13 +3,17 @@ package com.ducheng.distributed.dynamic.schedule.config;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -25,8 +29,11 @@ import com.ducheng.distributed.dynamic.schedule.annotation.DynamicScheduled;
 import com.ducheng.distributed.dynamic.schedule.task.CustomCronTaskRegister;
 import com.ducheng.distributed.dynamic.schedule.task.DcSchedulingRunnable;
 
-public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor,InitializingBean {
+public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor, CommandLineRunner {
 
+    private static Log log = LogFactory.getLog(DynamicSchedulingAutoRegistryProcess.class);
+
+    private static Map<String,String> LOCAL_SCHEDULE_KEYS_MAP = new HashMap<>(16);
 
     private CustomCronTaskRegister customCronTaskRegister;
 
@@ -34,7 +41,7 @@ public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor,I
     @Autowired
     private NacosConfigProperties nacosConfigProperties;
 
-    @Value("${spring.cloud.distributed.dynamic.schedule-id}")
+    @Value("${spring.cloud.nacos.config.distributed.dynamic.schedule-id}")
     private String dataId;
 
 
@@ -58,7 +65,7 @@ public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor,I
                     list.add(schedulingRunnable.getTaskId());
                 }
                 ConstantsPool.RUNNABLE_MAP.put(schedulingRunnable.getTaskId(),schedulingRunnable);
-                customCronTaskRegister.addCronTask(schedulingRunnable.getTaskId(),resolve);
+                //customCronTaskRegister.addCronTask(schedulingRunnable.getTaskId(),resolve);
             }
         }
         return bean;
@@ -86,22 +93,22 @@ public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor,I
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void run(String... args) throws Exception {
         ConfigService configService = NacosFactory.createConfigService(nacosConfigProperties.assembleConfigServiceProperties());
         // 程序首次启动, 并加载初始动态定时任务的配置
         String initConfigInfo = configService.getConfig(dataId, nacosConfigProperties.getGroup(), 5000);
         // 把配置文件解析成key value 的模式
-
-        //这里看看怎么把config 的配置搞成key value
-//        List<String> list = new ArrayList<String>(event.getKeys());
-//        for (String str : list) {
-//            if (ConstantsPool.PROPERTIES_TASK_IDS.containsKey(str)) {
-//                List<String> taskIds  = ConstantsPool.PROPERTIES_TASK_IDS.get(str);
-//                String cronExpression = environment.getProperty(str);
-//                addTask(taskIds,cronExpression);
-//            }
-//        }
-
+        //换行符\n
+        String lines[] = initConfigInfo.split("\\r?\\n");
+        //在转成map
+        for (String str: lines) {
+            String[] split = str.split(":");
+            if (ConstantsPool.PROPERTIES_TASK_IDS.containsKey(split[0])) {
+                List<String> taskIds  = ConstantsPool.PROPERTIES_TASK_IDS.get(split[0]);
+                String cronExpression = split[1];
+                addTask(taskIds,cronExpression);
+            }
+        }
     }
 
     /**
@@ -114,4 +121,5 @@ public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor,I
             customCronTaskRegister.addCronTask(x,cronExpression);
         });
     }
+
 }

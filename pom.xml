@@ -14,8 +14,14 @@
 	<name>dynamic-schedule-spring-boot-starter</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
-		<nacos.version>2021.1</nacos.version>
 		<java.version>1.8</java.version>
+		<spring-cloud-dependencies.version>2020.0.5</spring-cloud-dependencies.version>
+		<spring-cloud-starter-netflix-ribbon.version>2.2.10.RELEASE</spring-cloud-starter-netflix-ribbon.version>
+		<spring-cloud-openfeign-core.version>2.2.10.RELEASE</spring-cloud-openfeign-core.version>
+		<spring-cloud-starter-loadbalancer.version>3.1.3</spring-cloud-starter-loadbalancer.version>
+		<nacos.version>2021.1</nacos.version>
+		<nacos-local-config.version>2021.1-SNAPSHOT</nacos-local-config.version>
+		<spring-cloud-starter-bootstrap.version>3.0.5</spring-cloud-starter-bootstrap.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -43,15 +49,33 @@
 
 		<dependency>
 			<groupId>com.alibaba.cloud</groupId>
-			<artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+			<artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
 			<version>${nacos.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.alibaba.cloud</groupId>
-			<artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+			<artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
 			<version>${nacos.version}</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-bootstrap</artifactId>
+			<version>${spring-cloud-starter-bootstrap.version}</version>
+		</dependency>
 	</dependencies>
+
+	<!-- springcloud 的公共依赖-->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>${spring-cloud-dependencies.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 
 </project>
