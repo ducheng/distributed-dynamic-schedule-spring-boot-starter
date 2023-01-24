@@ -8,9 +8,10 @@
 		<version>2.5.14</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.msxf.dynamic.schedule</groupId>
+	<groupId>com.github.ducheng</groupId>
 	<artifactId>dynamic-schedule-nacos-spring-boot-starter</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>0.0.1</version>
+
 	<name>dynamic-schedule-spring-boot-starter</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
