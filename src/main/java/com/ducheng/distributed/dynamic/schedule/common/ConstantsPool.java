@@ -31,7 +31,7 @@ public class ConstantsPool {
 
 
     /**
-     *  add count number
+     *  add count number key
      */
-    private static Long SERVICE_NUMBER = 0L;
+    public static String SERVICE_NUMBER = "service_number";
 }

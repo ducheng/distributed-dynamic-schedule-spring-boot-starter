@@ -1,6 +1,8 @@
 package com.ducheng.distributed.dynamic.schedule.task;
 
 import com.ducheng.distributed.dynamic.schedule.common.ConstantsPool;
+import org.redisson.api.RAtomicLong;
+import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -12,6 +14,8 @@ import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.List;
 
+import static com.ducheng.distributed.dynamic.schedule.common.ConstantsPool.SERVICE_NUMBER;
+
 /**
  *  定时任务注册器
  */
@@ -22,6 +26,9 @@ public class CustomCronTaskRegister implements DisposableBean {
 
     @Resource(name = "dynamic-schedule-taskScheduler")
     private TaskScheduler taskScheduler;
+
+    @Autowired
+    private RedissonClient redissonClient;
 
 
     @Autowired
@@ -58,11 +65,17 @@ public class CustomCronTaskRegister implements DisposableBean {
         ConstantsPool.TASK_CONCURRENT_HASH_MAP.clear();
         ConstantsPool.RUNNABLE_MAP.clear();
         Collection<List<String>> values = ConstantsPool.PROPERTIES_TASK_IDS.values();
-        values.stream().forEach(x->{
-            x.stream().forEach(y-> {
-                stringRedisTemplate.delete(y);
+        RAtomicLong atomicLong = redissonClient.getAtomicLong(SERVICE_NUMBER);
+        Long number = atomicLong.get();
+        if (number.intValue() == 1 ) {
+
+            values.stream().forEach(x->{
+                x.stream().forEach(y-> {
+                    stringRedisTemplate.delete(y);
+                });
             });
-        });
+        }
         ConstantsPool.PROPERTIES_TASK_IDS.clear();
+        atomicLong.decrementAndGet();
     }
 }
