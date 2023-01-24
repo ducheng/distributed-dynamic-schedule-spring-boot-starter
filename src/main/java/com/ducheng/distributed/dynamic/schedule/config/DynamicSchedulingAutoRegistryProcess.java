@@ -18,7 +18,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -67,7 +66,6 @@ public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor, 
                     list.add(schedulingRunnable.getTaskId());
                 }
                 ConstantsPool.RUNNABLE_MAP.put(schedulingRunnable.getTaskId(),schedulingRunnable);
-                //customCronTaskRegister.addCronTask(schedulingRunnable.getTaskId(),resolve);
             }
         }
         return bean;

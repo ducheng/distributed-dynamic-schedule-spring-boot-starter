@@ -16,16 +16,22 @@ public class ConstantsPool {
     /**
      *  key taskId , value Task
      */
-    public static final Map<String, ScheduledTask> TASK_CONCURRENT_HASH_MAP = new ConcurrentHashMap<>(16);
+    public static  Map<String, ScheduledTask> TASK_CONCURRENT_HASH_MAP = new ConcurrentHashMap<>(16);
 
     /**
      * key cronExpression value List<TaskIds>
      */
-    public static final Map<String, List<String>> PROPERTIES_TASK_IDS = new ConcurrentHashMap<>(16);
+    public static  Map<String, List<String>> PROPERTIES_TASK_IDS = new ConcurrentHashMap<>(16);
 
 
     /**
      * key taskId value DcSchedulingRunnable
      */
-    public static final Map<String, DcSchedulingRunnable> RUNNABLE_MAP = new ConcurrentHashMap<>(16);
+    public static  Map<String, DcSchedulingRunnable> RUNNABLE_MAP = new ConcurrentHashMap<>(16);
+
+
+    /**
+     *  add count number
+     */
+    private static Long SERVICE_NUMBER = 0L;
 }

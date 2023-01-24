@@ -3,10 +3,8 @@ package com.ducheng.distributed.dynamic.schedule.config;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.ducheng.distributed.dynamic.schedule.utils.SpringUtils;
-import com.ducheng.distributed.dynamic.schedule.utils.StrUtil;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
