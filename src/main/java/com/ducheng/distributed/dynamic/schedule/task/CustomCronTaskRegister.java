@@ -4,9 +4,13 @@ import com.ducheng.distributed.dynamic.schedule.common.ConstantsPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.config.CronTask;
 import javax.annotation.Resource;
+import java.util.Collection;
+import java.util.List;
 
 /**
  *  定时任务注册器
@@ -19,9 +23,9 @@ public class CustomCronTaskRegister implements DisposableBean {
     @Resource(name = "dynamic-schedule-taskScheduler")
     private TaskScheduler taskScheduler;
 
-    public TaskScheduler getScheduler() {
-        return this.taskScheduler;
-    }
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
 
     public void addCronTask(String taskId, String cronExpression) {
@@ -53,6 +57,12 @@ public class CustomCronTaskRegister implements DisposableBean {
     public void destroy() {
         ConstantsPool.TASK_CONCURRENT_HASH_MAP.clear();
         ConstantsPool.RUNNABLE_MAP.clear();
+        Collection<List<String>> values = ConstantsPool.PROPERTIES_TASK_IDS.values();
+        values.stream().forEach(x->{
+            x.stream().forEach(y-> {
+                stringRedisTemplate.delete(y);
+            });
+        });
         ConstantsPool.PROPERTIES_TASK_IDS.clear();
     }
 }

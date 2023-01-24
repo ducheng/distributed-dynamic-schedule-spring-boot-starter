@@ -17,7 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 public class NacosClientApiTest {
 
 
-    @Value("${spring.cloud.distributed.dynamic.schedule-id}")
+    @Value("${spring.cloud.nacos.config.distributed.dynamic.schedule-id}")
     private String dataId;
 
     @Autowired
@@ -31,5 +31,6 @@ public class NacosClientApiTest {
         String initConfigInfo = configService.getConfig(dataId, nacosConfigProperties.getGroup(), 5000);
         // 把配置文件解析成key value 的模式
 
+        System.out.println("parament:"+initConfigInfo);
     }
 }

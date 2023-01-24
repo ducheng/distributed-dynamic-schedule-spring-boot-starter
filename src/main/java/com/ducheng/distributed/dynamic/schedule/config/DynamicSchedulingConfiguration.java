@@ -2,6 +2,13 @@ package com.ducheng.distributed.dynamic.schedule.config;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.ducheng.distributed.dynamic.schedule.utils.SpringUtils;
+import com.ducheng.distributed.dynamic.schedule.utils.StrUtil;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.EnvironmentAware;
@@ -14,6 +21,7 @@ import com.ducheng.distributed.dynamic.schedule.task.CustomCronTaskRegister;
  */
 public class DynamicSchedulingConfiguration implements EnvironmentAware,  ApplicationListener<EnvironmentChangeEvent> {
 
+    private static  RedissonClient redissonClient =  SpringUtils.getBean(RedissonClient.class);
 
     private Environment environment;
 
@@ -25,14 +33,21 @@ public class DynamicSchedulingConfiguration implements EnvironmentAware,  Applic
 
     @Override
     public void onApplicationEvent(EnvironmentChangeEvent event) {
-
         List<String> list = new ArrayList<String>(event.getKeys());
-        for (String str : list) {
-            if (ConstantsPool.PROPERTIES_TASK_IDS.containsKey(str)) {
-                List<String> taskIds  = ConstantsPool.PROPERTIES_TASK_IDS.get(str);
-                String cronExpression = environment.getProperty(str);
-                addTask(taskIds,cronExpression);
+        //这里要加上redislock的分布式锁， 保证只有一个实例来执行。
+        String toJSONString = JSONObject.toJSONString(list);
+        RLock lock = redissonClient.getLock(toJSONString);
+        lock.lock();
+        try {
+            for (String str : list) {
+                if (ConstantsPool.PROPERTIES_TASK_IDS.containsKey(str)) {
+                    List<String> taskIds  = ConstantsPool.PROPERTIES_TASK_IDS.get(str);
+                    String cronExpression = environment.getProperty(str);
+                    addTask(taskIds,cronExpression);
+                }
             }
+        }finally {
+            lock.unlock();
         }
     }
 

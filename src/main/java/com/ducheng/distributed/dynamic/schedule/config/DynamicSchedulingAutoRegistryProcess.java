@@ -5,8 +5,11 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.alibaba.fastjson.JSONObject;
 import com.ducheng.distributed.dynamic.schedule.utils.SpringUtils;
 import com.ducheng.distributed.dynamic.schedule.utils.StrUtil;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +18,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.ObjectUtils;
@@ -35,6 +40,12 @@ public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor, 
     @Value("${spring.cloud.nacos.config.distributed.dynamic.schedule-id}")
     private String dataId;
 
+    @Autowired
+    private RedissonClient redissonClient;
+
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
@@ -91,14 +102,21 @@ public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor, 
         // 把配置文件解析成key value 的模式
         //换行符\n
         String lines[] = initConfigInfo.split("\\r?\\n");
-        //在转成map
-        for (String str: lines) {
-            String[] split = str.split(": ");
-            if (ConstantsPool.PROPERTIES_TASK_IDS.containsKey(split[0])) {
-                List<String> taskIds  = ConstantsPool.PROPERTIES_TASK_IDS.get(split[0]);
-                String cronExpression = split[1];
-                addTask(taskIds,cronExpression);
+        String toJSONString = JSONObject.toJSONString(lines);
+        RLock lock = redissonClient.getLock(toJSONString);
+        lock.lock();
+        try {
+            //在转成map
+            for (String str: lines) {
+                String[] split = str.split(": ");
+                if (ConstantsPool.PROPERTIES_TASK_IDS.containsKey(split[0])) {
+                    List<String> taskIds  = ConstantsPool.PROPERTIES_TASK_IDS.get(split[0]);
+                    String cronExpression = split[1];
+                    addTask(taskIds,cronExpression);
+                }
             }
+        }finally {
+            lock.unlock();
         }
     }
 
@@ -109,7 +127,11 @@ public class DynamicSchedulingAutoRegistryProcess implements BeanPostProcessor, 
      */
     public void addTask(List<String> taskIds,String cronExpression) {
         taskIds.stream().forEach(x-> {
-            SpringUtils.getBean(CustomCronTaskRegister.class).addCronTask(x,cronExpression);
+            Boolean aBoolean = stringRedisTemplate.hasKey(x);
+            if (!aBoolean) {
+                SpringUtils.getBean(CustomCronTaskRegister.class).addCronTask(x,cronExpression);
+                stringRedisTemplate.opsForValue().set(x,x);
+            }
         });
     }
 }
