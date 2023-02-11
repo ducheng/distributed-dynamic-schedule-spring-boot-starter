@@ -14,13 +14,11 @@ import com.ducheng.distributed.dynamic.schedule.task.ScheduledTask;
 public class ConstantsPool {
 
     /**
-     *  key taskId , value Task
+     *  key String , value ScheduledTask
      */
     public static  Map<String, ScheduledTask> TASK_CONCURRENT_HASH_MAP = new ConcurrentHashMap<>(16);
 
-    /**
-     * key cronExpression value List<TaskIds>
-     */
+
     public static  Map<String, List<String>> PROPERTIES_TASK_IDS = new ConcurrentHashMap<>(16);
 
 

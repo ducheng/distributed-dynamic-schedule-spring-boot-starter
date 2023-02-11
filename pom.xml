@@ -8,12 +8,44 @@
 		<version>2.5.14</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.github.ducheng</groupId>
-	<artifactId>dynamic-schedule-nacos-spring-boot-starter</artifactId>
-	<version>0.0.1</version>
 
-	<name>dynamic-schedule-spring-boot-starter</name>
+
+	<scm>
+		<tag>main</tag>
+		<url>https://github.com/ducheng/distributed-dynamic-redis-spring-boot-starter</url>
+		<connection>scm:git:https://github.com/ducheng/distributed-dynamic-redis-spring-boot-starter.git
+		</connection>
+		<developerConnection>scm:git:git@https://github.com/ducheng/distributed-dynamic-redis-spring-boot-starter.git
+		</developerConnection>
+	</scm>
+
+
+	<!-- 许可证类型，一般与项目仓库保持一致 -->
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<!-- 开发者信息 -->
+	<developers>
+		<developer>
+			<name>ducheng</name>
+			<email>2043795159@qq.com</email>
+		</developer>
+	</developers>
+
+	<groupId>com.github.ducheng</groupId>
+	<artifactId>distributed-dynamic-redis-spring-boot-starter</artifactId>
+	<version>0.0.2</version>
+	<packaging>jar</packaging>
+
+	<name>distributed-dynamic-redis-spring-boot-starter</name>
 	<description>Demo project for Spring Boot</description>
+	<url>https://github.com/ducheng/dynamic-redis-spring-boot-starter</url>
+
 	<properties>
 		<java.version>1.8</java.version>
 		<spring-cloud-dependencies.version>2020.0.5</spring-cloud-dependencies.version>
@@ -79,6 +111,100 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>sonatype-nexus-snapshots</id>
+			<name>Sonatype Nexus Snapshots</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>sonatype-nexus-staging</id>
+			<name>Nexus Release Repository</name>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
+
+	<build>
+		<plugins>
+			<!--生成源码插件-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.2.1</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<!--javadoc生成插件		-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- gpg plugin，用于签名认证 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.6</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<!--staging puglin，用于自动执行发布阶段(免手动)-->
+			<plugin>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>nexus-staging-maven-plugin</artifactId>
+				<version>1.6.7</version>
+				<extensions>true</extensions>
+				<configuration>
+					<serverId>sonatype-nexus-staging</serverId>
+					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+					<autoReleaseAfterClose>true</autoReleaseAfterClose>
+				</configuration>
+			</plugin>
+			<!-- release plugin，用于发布到release仓库部署插件 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.4.2</version>
+			</plugin>
+		</plugins>
+	</build>
+
+	<profiles>
+
+		<!-- gpg -->
+		<profile>
+			<id>maven-public</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<properties>
+				<gpg.executable>C:\Program Files\Git\usr\bin\gpg.exe</gpg.executable>
+				<gpg.passphrase>Dkq@1995</gpg.passphrase>
+			</properties>
+		</profile>
+
+	</profiles>
 
 
 </project>
